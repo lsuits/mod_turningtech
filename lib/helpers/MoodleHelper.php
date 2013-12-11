@@ -436,7 +436,7 @@ class TurningTechMoodleHelper {
             		INNER JOIN {user} uu ON uu.id = dd.userid
             		LEFT JOIN {user_enrolments} muee ON muee.userid = uu.id
             		LEFT JOIN {enrol} mee ON mee.id = muee.enrolid
-			WHERE dd.fieldid = 1 AND uu.deleted = 0 and uu.id = {$classros->id}";
+			WHERE dd.fieldid = {$fieldid} AND uu.deleted = 0 and uu.id = {$classros->id}";
             $paramssub['userid'] = $classros->id;
             $paramssub['deleted'] = 0;
             $deviceidmaps = $DB->get_records_sql($sqlsubs);
@@ -704,8 +704,7 @@ class TurningTechMoodleHelper {
      * @return unknown_type
      */
     public static function getgradebookitembycourseandtitle($course, $title) {
-        return grade_item::fetch(array ('itemname' => $title, 'courseid' => $course->id,
-                         'itemmodule' => TURNINGTECH_GRADE_ITEM_MODULE));
+        return grade_item::fetch(array ('itemname' => $title, 'courseid' => $course->id));
     }
     /**
      * fetch a gradebook item
@@ -758,10 +757,14 @@ class TurningTechMoodleHelper {
         $sql = "SELECT ue.enrolid ";
         $sql .= "FROM {user_enrolments} ue ";
         $sql .= "INNER JOIN {user} u ON ( u.id = ue.userid AND u.id = :userid ) ";
-        $sql .= "INNER JOIN {enrol} e ON ( e.id = ue.enrolid AND e.courseid = :courseid  AND e.roleid IN ( " . $roles[0] . " ) )";
+        $sql .= "INNER JOIN {enrol} e ON ( e.id = ue.enrolid AND e.courseid = :courseid)";
+        $sql .= "LEFT JOIN {role_assignments} r ON r.userid = u.id ";
+        $sql .= "LEFT JOIN {context} c ON r.contextid = c.id ";
+        $where = "r.roleid IN (" . $roles[0] . ")";
         $params = array ();
         $params['userid'] = $user->id;
         $params['courseid'] = $course->id;
+        $sql = "{$sql} WHERE {$where}";
         $found = $DB->get_records_sql($sql, $params);
         return ($found ? true : false);
     }
